@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Civic Reporting & Accountability - Lapor Warga</title>
+    <!-- Memuat CSS Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            position: relative;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Container Latar Belakang Crossfade Ultra-Smooth */
+        .bg-slideshow-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+        }
+
+        .bg-slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            opacity: 0;
+            transition: opacity 1.5s ease-in-out;
+        }
+
+        .bg-slide.active {
+            opacity: 1;
+        }
+
+        /* Lapisan Gelap Transparan */
+        .bg-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background-color: rgba(0, 0, 0, 0.45);
+        }
+
+        /* Card Dibuat Putih Transparan (Glassmorphism Putih) */
+        .glass-card {
+            background-color: rgba(255, 255, 255, 0.25) !important;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.4) !important;
+        }
+
+        .glass-card h2, 
+        .glass-card label {
+            color: #ffffff !important;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+        }
+
+        .form-control, .form-select {
+            background-color: rgba(255, 255, 255, 0.35);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            color: #000000;
+        }
+
+        .form-control::placeholder {
+            color: #374151;
+        }
+
+        .form-control:focus, .form-select:focus {
+            background-color: rgba(255, 255, 255, 0.55);
+            color: #000000;
+            border-color: #60a5fa;
+            box-shadow: 0 0 0 0.25rem rgba(96, 165, 250, 0.25);
+        }
+
+        .form-select option {
+            background-color: #1e293b;
+            color: #ffffff;
+        }
+
+        .media-preview {
+            max-width: 100%;
+            max-height: 320px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+
+        .admin-response-box {
+            background-color: rgba(13, 110, 253, 0.1);
+            border-left: 3px solid #0d6efd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="py-4">
+
+<!-- Double-layer Background Slideshow untuk Smooth Crossfade -->
+<div class="bg-slideshow-container">
+    <div class="bg-slide active" id="bgSlide1"></div>
+    <div class="bg-slide" id="bgSlide2"></div>
+</div>
+<div class="bg-overlay"></div>
+<div>
+    <a href="password.html" class="btn btn-outline-primary btn-sm me-2">&larr; admin</a>
+</div>
+<div class="container" style="max-width: 800px;">
+    <!-- Judul Halaman -->
+    <div class="text-center mb-4">
+        <h1 class="text-white fw-bold shadow-sm h3 mb-0">Portal Pelaporan Warga</h1>
+    </div>
+
+    <!-- Form Input Laporan -->
+    <div class="card shadow-lg mb-4 glass-card">
+        <div class="card-body p-4">
+            <h2 class="h4 mb-3">Buat Laporan Baru</h2>
+            <form id="reportForm">
+                <div class="mb-3">
+                    <label for="nama" class="form-label fw-bold">Nama Pelapor</label>
+                    <input type="text" class="form-control" id="nama" placeholder="Masukkan nama Anda" required>
+                </div>
+                <div class="mb-3">
+                    <label for="kategori" class="form-label fw-bold">Kategori Masalah</label>
+                    <select class="form-select" id="kategori" required>
+                        <option value="">-- Pilih Kategori --</option>
+                        <option value="Infrastruktur Rusak">Infrastruktur Rusak</option>
+                        <option value="Isu Lingkungan">Isu Lingkungan / Sampah</option>
+                        <option value="Fasilitas Publik">Fasilitas Publik</option>
+                        <option value="Dugaan Penyimpangan">Dugaan Penyimpangan</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="lokasi" class="form-label fw-bold">Lokasi Kejadian</label>
+                    <input type="text" class="form-control" id="lokasi" placeholder="Jalan, RT/RW, Kecamatan" required>
+                </div>
+                <div class="mb-3">
+                    <label for="deskripsi" class="form-label fw-bold">Deskripsi Laporan</label>
+                    <textarea class="form-control" id="deskripsi" rows="3" placeholder="Jelaskan detail masalah..." required></textarea>
+                </div>
+                <!-- Input Upload Gambar/Video -->
+                <div class="mb-3">
+                    <label for="mediaFile" class="form-label fw-bold">Upload Foto / Video Bukti (Opsional)</label>
+                    <input type="file" class="form-control" id="mediaFile" accept="image/*,video/*">
+                </div>
+                <button type="submit" class="btn btn-primary w-100 fw-bold py-2 shadow">Kirim Laporan</button>
+            </form>
+        </div>
+    </div>
+    <!-- Daftar Laporan Publik -->
+    <div class="card shadow-lg glass-card">
+        <div class="card-body p-4">
+            <h2 class="h4 mb-3">Daftar Pengawasan Publik (Real-time)</h2>
+            <label for="deskripsi" class="form-label fw-bold">kritik dan saran</label>
+                    <textarea class="form-control" id="deskripsi" rows="3" placeholder="kirim saran dan kritik disini" required></textarea>
+                    <button type="submit" class="btn btn-primary w-100 fw-bold py-2 shadow">Kirim saran</button>
+            <div id="reportList">
+                <p id="emptyText" class="text-white">Belum ada laporan yang dikirim.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Memuat JS Bootstrap 5 -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // Total 10 Gambar Kota
+    const cityImages = [
+        'https://images.unsplash.com/photo-1519501025264-65ba15a82390?auto=format&fit=crop&w=1920&q=80',
+        'https://images.unsplash.com/photo-1477959858617-67f30ac4ce78?auto=format&fit=crop&w=1920&q=80',
+        'https://images.unsplash.com/photo-1514565131-fce0801e5785?auto=format&fit=crop&w=1920&q=80',
+        'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=80',
+        'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1920&q=80',
+        'https://images.unsplash.com/photo-1444723121867-7a241cacace9?auto=format&fit=crop&w=1920&q=80',
+        'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=1920&q=80',
+        'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?auto=format&fit=crop&w=1920&q=80',
+        'https://images.unsplash.com/photo-1502899576159-f224dc2349fa?auto=format&fit=crop&w=1920&q=80',
+        'https://images.unsplash.com/photo-1496568816309-51a7c20e3821?auto=format&fit=crop&w=1920&q=80'
+    ];
+
+    let currentImageIndex = 0;
+    let activeSlide = 1;
+
+    const slide1 = document.getElementById('bgSlide1');
+    const slide2 = document.getElementById('bgSlide2');
+
+    slide1.style.backgroundImage = `url('${cityImages[0]}')`;
+
+    setInterval(() => {
+        currentImageIndex = (currentImageIndex + 1) % cityImages.length;
+        const nextImage = cityImages[currentImageIndex];
+
+        if (activeSlide === 1) {
+            slide2.style.backgroundImage = `url('${nextImage}')`;
+            slide2.classList.add('active');
+            slide1.classList.remove('active');
+            activeSlide = 2;
+        } else {
+            slide1.style.backgroundImage = `url('${nextImage}')`;
+            slide1.classList.add('active');
+            slide2.classList.remove('active');
+            activeSlide = 1;
+        }
+    }, 2000);
+
+    // Fungsi membaca & menampilkan data laporan dari localStorage
+    function loadReports() {
+        const reportList = document.getElementById('reportList');
+        const emptyText = document.getElementById('emptyText');
+        const reports = JSON.parse(localStorage.getItem('civicReports')) || [];
+
+        reportList.innerHTML = '';
+
+        if (reports.length === 0) {
+            reportList.appendChild(emptyText);
+            emptyText.style.display = 'block';
+            return;
+        }
+
+        reports.forEach(report => {
+            const reportCard = document.createElement('div');
+            reportCard.className = 'p-3 mb-3 bg-white bg-opacity-75 border-start border-primary border-4 rounded shadow-sm text-dark';
+            
+            const badgeClass = report.status === 'Telah Diverifikasi' ? 'bg-success text-white' : 'bg-warning text-dark';
+
+            // Menampilkan Foto atau Video Bukti
+            let mediaHTML = '';
+            if (report.media) {
+                if (report.mediaType && report.mediaType.startsWith('image/')) {
+                    mediaHTML = `<div class="mt-2 mb-2"><img src="${report.media}" class="media-preview" alt="Bukti Foto Laporan"></div>`;
+                } else if (report.mediaType && report.mediaType.startsWith('video/')) {
+                    mediaHTML = `<div class="mt-2 mb-2"><video src="${report.media}" controls class="media-preview"></video></div>`;
+                }
+            }
+
+            // Menampilkan Catatan/Tanggapan Admin jika ada
+            let noteHTML = '';
+            if (report.adminNote) {
+                noteHTML = `
+                    <div class="admin-response-box p-2 mt-2 mb-2">
+                        <small class="fw-bold text-primary d-block">💬 Tanggapan Petugas:</small>
+                        <small class="text-dark">${report.adminNote}</small>
+                    </div>
+                `;
+            }
+
+            reportCard.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <strong class="text-dark">[${report.ticketId}] ${report.kategori}</strong>
+                    <span class="badge ${badgeClass}">${report.status}</span>
+                </div>
+                <p class="mb-2 text-dark">${report.deskripsi}</p>
+                ${mediaHTML}
+                ${noteHTML}
+                <small class="text-muted">
+                    <strong>Pelapor:</strong> ${report.nama} | 
+                    <strong>Lokasi:</strong> ${report.lokasi} | 
+                    <strong>Tanggal:</strong> ${report.tanggal}
+                </small>
+            `;
+            reportList.appendChild(reportCard);
+        });
+    }
+
+    loadReports();
+
+    // Fungsi konversi file media ke Base64
+    function fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+            reader.readAsDataURL(file);
+        });
+    }
+
+    // Mengirim Form
+    const form = document.getElementById('reportForm');
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const fileInput = document.getElementById('mediaFile');
+        let mediaData = null;
+        let mediaType = null;
+
+        if (fileInput.files.length > 0) {
+            const file = fileInput.files[0];
+            mediaType = file.type;
+            try {
+                mediaData = await fileToBase64(file);
+            } catch (err) {
+                console.error("Gagal membaca file media", err);
+            }
+        }
+
+        const newReport = {
+            ticketId: 'CR-' + Math.floor(100000 + Math.random() * 900000),
+            nama: document.getElementById('nama').value,
+            kategori: document.getElementById('kategori').value,
+            lokasi: document.getElementById('lokasi').value,
+            deskripsi: document.getElementById('deskripsi').value,
+            media: mediaData,
+            mediaType: mediaType,
+            adminNote: '', // Kolom catatan/kata yang diisi oleh admin nanti
+            tanggal: new Date().toLocaleDateString('id-ID'),
+            status: 'Menunggu Verifikasi'
+        };
+
+        let reports = JSON.parse(localStorage.getItem('civicReports')) || [];
+        reports.unshift(newReport);
+        localStorage.setItem('civicReports', JSON.stringify(reports));
+
+        form.reset();
+        alert('berhasil terkirim dengan Nomor Tiket: ' + newReport.ticketId);
+        loadReports();
+    });
+</script>
+
+</body>
+</html>

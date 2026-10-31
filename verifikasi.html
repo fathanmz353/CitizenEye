@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure OTP Verification</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts (Inter) -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Smooth shake animation for invalid inputs */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+
+        .animate-shake {
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        /* Pulse ring animation */
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.05); opacity: 0.4; }
+            100% { transform: scale(0.95); opacity: 0.8; }
+        }
+
+        .pulse-ring {
+            animation: pulse-ring 3s infinite ease-in-out;
+        }
+
+        /* Custom scrollbar for modern feel */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex items-center justify-center p-4 selection:bg-indigo-500 selection:text-white">
+
+    <!-- Main Container -->
+    <div class="relative w-full max-w-md">
+        
+        <!-- Background Glowing Blur Effects -->
+        <div class="absolute -top-12 -left-12 w-48 h-48 bg-indigo-500 rounded-full filter blur-3xl opacity-20 pointer-events-none"></div>
+        <div class="absolute -bottom-12 -right-12 w-48 h-48 bg-emerald-500 rounded-full filter blur-3xl opacity-20 pointer-events-none"></div>
+
+        <!-- Verification Card -->
+        <div id="card" class="relative bg-slate-800/90 backdrop-blur-xl border border-slate-700/60 rounded-2xl shadow-2xl p-6 sm:p-8 transition-all duration-300">
+            
+            <!-- Top Icon Badge -->
+            <div class="flex justify-center mb-6">
+                <div class="relative flex items-center justify-center w-16 h-16 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 shadow-inner">
+                    <i id="headerIcon" class="fa-solid fa-shield-halved text-2xl transition-all duration-300"></i>
+                </div>
+            </div>
+
+            <!-- Verification Form -->
+            <form id="otpForm" onsubmit="return false;" class="space-y-6">
+                
+                <!-- OTP Inputs Container -->
+                <div id="inputContainer" class="flex items-center justify-between gap-2 sm:gap-3">
+                    <input type="text" maxlength="1" pattern="[0-9]*" inputmode="numeric" autocomplete="one-time-code" class="otp-input w-11 h-14 sm:w-12 sm:h-16 text-center text-xl font-bold text-white bg-slate-900/80 border border-slate-700 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 focus:outline-none transition-all duration-200 shadow-sm" required aria-label="Digit 1">
+                    <input type="text" maxlength="1" pattern="[0-9]*" inputmode="numeric" autocomplete="one-time-code" class="otp-input w-11 h-14 sm:w-12 sm:h-16 text-center text-xl font-bold text-white bg-slate-900/80 border border-slate-700 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 focus:outline-none transition-all duration-200 shadow-sm" required aria-label="Digit 2">
+                    <input type="text" maxlength="1" pattern="[0-9]*" inputmode="numeric" autocomplete="one-time-code" class="otp-input w-11 h-14 sm:w-12 sm:h-16 text-center text-xl font-bold text-white bg-slate-900/80 border border-slate-700 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 focus:outline-none transition-all duration-200 shadow-sm" required aria-label="Digit 3">
+                    <input type="text" maxlength="1" pattern="[0-9]*" inputmode="numeric" autocomplete="one-time-code" class="otp-input w-11 h-14 sm:w-12 sm:h-16 text-center text-xl font-bold text-white bg-slate-900/80 border border-slate-700 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 focus:outline-none transition-all duration-200 shadow-sm" required aria-label="Digit 4">
+                    <input type="text" maxlength="1" pattern="[0-9]*" inputmode="numeric" autocomplete="one-time-code" class="otp-input w-11 h-14 sm:w-12 sm:h-16 text-center text-xl font-bold text-white bg-slate-900/80 border border-slate-700 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 focus:outline-none transition-all duration-200 shadow-sm" required aria-label="Digit 5">
+                    <input type="text" maxlength="1" pattern="[0-9]*" inputmode="numeric" autocomplete="one-time-code" class="otp-input w-11 h-14 sm:w-12 sm:h-16 text-center text-xl font-bold text-white bg-slate-900/80 border border-slate-700 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 focus:outline-none transition-all duration-200 shadow-sm" required aria-label="Digit 6">
+                </div>
+
+                <!-- Live Status Message -->
+                <div id="statusMessage" class="hidden min-h-[40px] p-3 rounded-xl text-xs sm:text-sm font-medium flex items-center gap-2 justify-center transition-all duration-300">
+                    <i id="statusIcon" class="fa-solid"></i>
+                    <span id="statusText"></span>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" id="submitBtn" class="w-full py-3.5 px-4 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 disabled:bg-slate-700 disabled:text-slate-500 text-white font-semibold rounded-xl shadow-lg shadow-indigo-600/25 disabled:shadow-none transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed">
+                    <span id="btnText">Verify Security Code</span>
+                    <i id="btnIcon" class="fa-solid fa-arrow-right text-sm"></i>
+                    <!-- Spinner SVG for Loading -->
+                    <svg id="btnSpinner" class="hidden animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </button>
+            </form>
+
+            <!-- Footer & Resend Option -->
+            <div class="mt-8 text-center text-xs sm:text-sm text-slate-400">
+                <p class="flex items-center justify-center gap-1.5">
+                    Didn't receive the code?
+                    <button id="resendBtn" disabled class="text-slate-500 font-semibold transition-colors duration-200 disabled:cursor-not-allowed">
+                        Resend Code
+                    </button>
+                </p>
+                <!-- Countdown Timer -->
+                <p id="timerContainer" class="text-xs text-slate-500 mt-1">
+                    Resend available in <span id="timerText" class="font-mono text-slate-400 font-medium">00:30</span>
+                </p>
+            </div>
+
+            <!-- Security Footer Badge -->
+            <div class="mt-8 pt-4 border-t border-slate-700/50 flex items-center justify-between text-[11px] text-slate-500">
+                <span class="flex items-center gap-1">
+                    <i class="fa-solid fa-lock text-emerald-500"></i> Encrypted Connection
+                </span>
+                <span>Max 3 Attempts</span>
+            </div>
+
+        </div>
+
+        <!-- Success Modal / Overlay State -->
+        <div id="successOverlay" class="hidden absolute inset-0 bg-slate-800/95 backdrop-blur-xl border border-slate-700/60 rounded-2xl p-8 flex flex-col items-center justify-center text-center transition-all duration-300 z-20">
+            <div class="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mb-4 text-3xl">
+                <i class="fa-solid fa-check"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-white mb-2">Verification Complete!</h2>
+            <p class="text-slate-300 text-sm mb-6">Your identity has been successfully authenticated.</p>
+            <button class="py-2.5 px-6 bg-slate-700 hover:bg-slate-600 text-white rounded-xl text-sm font-medium transition-colors">
+                <a href="data-masyarakat.html">ke panel admin</a>
+            </button>
+        </div>
+
+    </div>
+
+    <!-- Application Logic -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const inputs = Array.from(document.querySelectorAll('.otp-input'));
+            const form = document.getElementById('otpForm');
+            const submitBtn = document.getElementById('submitBtn');
+            const btnText = document.getElementById('btnText');
+            const btnIcon = document.getElementById('btnIcon');
+            const btnSpinner = document.getElementById('btnSpinner');
+            const statusMessage = document.getElementById('statusMessage');
+            const statusIcon = document.getElementById('statusIcon');
+            const statusText = document.getElementById('statusText');
+            const resendBtn = document.getElementById('resendBtn');
+            const timerContainer = document.getElementById('timerContainer');
+            const timerText = document.getElementById('timerText');
+            const quickFillBtn = document.getElementById('quickFillBtn');
+            const card = document.getElementById('card');
+            const headerIcon = document.getElementById('headerIcon');
+            const successOverlay = document.getElementById('successOverlay');
+
+            const DEMO_CODE = '895854';
+            let timerSeconds = 30;
+            let timerInterval = null;
+            let attemptsLeft = 3;
+
+            // Auto focus on first input upon load
+            inputs[0].focus();
+
+            // Setup OTP Input Handlers
+            inputs.forEach((input, index) => {
+                
+                // Input handler (handles key typing, sanitization, auto-advance)
+                input.addEventListener('input', (e) => {
+                    // Sanitize input to allow ONLY digits 0-9
+                    const val = e.target.value.replace(/[^0-9]/g, '');
+                    e.target.value = val;
+
+                    if (val) {
+                        input.classList.add('border-indigo-500', 'bg-slate-800');
+                        // Auto-focus next input field if available
+                        if (index < inputs.length - 1) {
+                            inputs[index + 1].focus();
+                        }
+                    } else {
+                        input.classList.remove('border-indigo-500', 'bg-slate-800');
+                    }
+
+                    clearStatus();
+                    checkAutoSubmit();
+                });
+
+                // Keydown handler (handles Backspace navigation and Arrow keys)
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace') {
+                        if (!input.value && index > 0) {
+                            inputs[index - 1].focus();
+                            inputs[index - 1].value = '';
+                            inputs[index - 1].classList.remove('border-indigo-500', 'bg-slate-800');
+                        }
+                    } else if (e.key === 'ArrowLeft' && index > 0) {
+                        inputs[index - 1].focus();
+                    } else if (e.key === 'ArrowRight' && index < inputs.length - 1) {
+                        inputs[index + 1].focus();
+                    }
+                });
+
+                // Paste Event (Handles 6-digit paste seamlessly)
+                input.addEventListener('paste', (e) => {
+                    e.preventDefault();
+                    const pasteData = e.clipboardData.getData('text').trim();
+                    const cleanCode = pasteData.replace(/[^0-9]/g, '').slice(0, 6);
+
+                    if (cleanCode.length > 0) {
+                        cleanCode.split('').forEach((char, i) => {
+                            if (inputs[i]) {
+                                inputs[i].value = char;
+                                inputs[i].classList.add('border-indigo-500', 'bg-slate-800');
+                            }
+                        });
+
+                        // Focus either the last input or the next empty one
+                        const focusIndex = Math.min(cleanCode.length, inputs.length - 1);
+                        inputs[focusIndex].focus();
+
+                        checkAutoSubmit();
+                    }
+                });
+
+                // Selection auto-clears for crisp typing experience
+                input.addEventListener('focus', () => {
+                    input.select();
+                });
+            });
+
+            // Quick Fill Button for easy testing
+            quickFillBtn.addEventListener('click', () => {
+                DEMO_CODE.split('').forEach((char, i) => {
+                    inputs[i].value = char;
+                    inputs[i].classList.add('border-indigo-500', 'bg-slate-800');
+                });
+                inputs[inputs.length - 1].focus();
+                checkAutoSubmit();
+            });
+
+            // Check if all fields are filled to automatically trigger submit
+            function checkAutoSubmit() {
+                const code = getEnteredCode();
+                if (code.length === 6) {
+                    verifyOTP(code);
+                }
+            }
+
+            // Retrieve joined 6-digit string
+            function getEnteredCode() {
+                return inputs.map(input => input.value).join('');
+            }
+
+            // Form Submit Listener
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const code = getEnteredCode();
+                if (code.length === 6) {
+                    verifyOTP(code);
+                } else {
+                    showStatus('Please enter the full 6-digit code.', 'error');
+                    triggerShake();
+                }
+            });
+
+            // Main Verification Function (Simulating secure backend API verification)
+            function verifyOTP(code) {
+                if (submitBtn.disabled) return;
+
+                setLoadingState(true);
+                clearStatus();
+
+                // Simulate Network Request Delay
+                setTimeout(() => {
+                    setLoadingState(false);
+
+                    if (code === DEMO_CODE) {
+                        // Success Handler
+                        showStatus('Code verified successfully!', 'success');
+                        headerIcon.className = 'fa-solid fa-circle-check text-2xl text-emerald-400';
+                        
+                        setTimeout(() => {
+                            successOverlay.classList.remove('hidden');
+                        }, 600);
+
+                    } else {
+                        // Error Handler
+                        attemptsLeft--;
+                        triggerShake();
+                        
+                        if (attemptsLeft > 0) {
+                            showStatus(`Invalid verification code. ${attemptsLeft} attempt(s) remaining.`, 'error');
+                        } else {
+                            showStatus('Maximum attempts reached. Please request a new code.', 'error');
+                            disableAllInputs();
+                        }
+                    }
+                }, 1200);
+            }
+
+            // Set Loading UI State
+            function setLoadingState(isLoading) {
+                submitBtn.disabled = isLoading;
+                if (isLoading) {
+                    btnText.textContent = 'Verifying...';
+                    btnIcon.classList.add('hidden');
+                    btnSpinner.classList.remove('hidden');
+                } else {
+                    btnText.textContent = 'Verify Security Code';
+                    btnIcon.classList.remove('hidden');
+                    btnSpinner.classList.add('hidden');
+                }
+            }
+
+            // Shake Animation for wrong OTP
+            function triggerShake() {
+                card.classList.add('animate-shake');
+                inputs.forEach(input => {
+                    input.classList.add('border-rose-500', 'text-rose-400');
+                });
+
+                setTimeout(() => {
+                    card.classList.remove('animate-shake');
+                }, 400);
+            }
+
+            // Clear Input Border Statuses
+            function clearStatus() {
+                statusMessage.classList.add('hidden');
+                inputs.forEach(input => {
+                    input.classList.remove('border-rose-500', 'text-rose-400');
+                });
+            }
+
+            // Show Custom Status Message Box
+            function showStatus(message, type) {
+                statusMessage.classList.remove('hidden', 'bg-rose-500/10', 'border-rose-500/30', 'text-rose-300', 'bg-emerald-500/10', 'border-emerald-500/30', 'text-emerald-300');
+                
+                if (type === 'error') {
+                    statusMessage.classList.add('bg-rose-500/10', 'border', 'border-rose-500/30', 'text-rose-300');
+                    statusIcon.className = 'fa-solid fa-circle-exclamation text-rose-400';
+                } else if (type === 'success') {
+                    statusMessage.classList.add('bg-emerald-500/10', 'border', 'border-emerald-500/30', 'text-emerald-300');
+                    statusIcon.className = 'fa-solid fa-circle-check text-emerald-400';
+                }
+
+                statusText.textContent = message;
+            }
+
+            // Disable all inputs when max attempts reached
+            function disableAllInputs() {
+                inputs.forEach(input => {
+                    input.disabled = true;
+                    input.classList.add('bg-slate-800/40', 'cursor-not-allowed');
+                });
+                submitBtn.disabled = true;
+            }
+
+            // Start Resend Countdown Timer
+            function startTimer() {
+                timerSeconds = 30;
+                resendBtn.disabled = true;
+                resendBtn.classList.replace('text-indigo-400', 'text-slate-500');
+                resendBtn.classList.remove('hover:text-indigo-300', 'hover:underline');
+                timerContainer.classList.remove('hidden');
+
+                clearInterval(timerInterval);
+                timerInterval = setInterval(() => {
+                    timerSeconds--;
+                    const secs = timerSeconds < 10 ? `0${timerSeconds}` : timerSeconds;
+                    timerText.textContent = `00:${secs}`;
+
+                    if (timerSeconds <= 0) {
+                        clearInterval(timerInterval);
+                        resendBtn.disabled = false;
+                        resendBtn.classList.replace('text-slate-500', 'text-indigo-400');
+                        resendBtn.classList.add('hover:text-indigo-300', 'hover:underline');
+                        timerContainer.classList.add('hidden');
+                    }
+                }, 1000);
+            }
+
+            // Resend Button Handler
+            resendBtn.addEventListener('click', () => {
+                if (resendBtn.disabled) return;
+
+                // Reset Attempts and Form
+                attemptsLeft = 3;
+                inputs.forEach(input => {
+                    input.value = '';
+                    input.disabled = false;
+                    input.classList.remove('bg-slate-800/40', 'cursor-not-allowed', 'border-rose-500', 'border-indigo-500');
+                });
+
+                submitBtn.disabled = false;
+                showStatus('A new 6-digit code has been dispatched.', 'success');
+                inputs[0].focus();
+                
+                // Restart Timer
+                startTimer();
+            });
+
+            // Global Reset Handler
+            window.resetApp = function() {
+                successOverlay.classList.add('hidden');
+                headerIcon.className = 'fa-solid fa-shield-halved text-2xl text-indigo-400';
+                inputs.forEach(input => {
+                    input.value = '';
+                    input.disabled = false;
+                    input.classList.remove('bg-slate-800/40', 'cursor-not-allowed', 'border-rose-500', 'border-indigo-500');
+                });
+                attemptsLeft = 3;
+                submitBtn.disabled = false;
+                clearStatus();
+                inputs[0].focus();
+                startTimer();
+            };
+
+            // Initialize Timer on Load
+            startTimer();
+        });
+    </script>
+</body>
+</html>
