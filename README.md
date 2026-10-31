@@ -1,5 +1,4 @@
-# CitizenEye
-Web ini adalah wadah resmi bagi warga untuk melaporkan infrastruktur rusak seperti jalan atau gedung langsung ke pemerintah secara cepat dan praktis. 
+
 # CitizenEye
 CitizenEye adalah platform pelaporan digital yang memudahkan warga untuk berpartisipasi aktif dalam melaporkan berbagai masalah atau fasilitas publik di sekitar mereka dengan cepat dan transparan.
 
@@ -9,13 +8,15 @@ CitizenEye adalah platform pelaporan digital yang memudahkan warga untuk berpart
 * **Database:** [Cara Menjalankan Project
 Ikuti langkah-langkah di bawah ini untuk menjalankan project secara lokal di perangkatmu:
 
-1. **Clone repository ini**
+**Clone repository ini**
    ```bash
    git clone [https://github.com/fathanmz353/CitizenEye.git](https://github.com/fathanmz353/CitizenEye.git)]
 
-## Cara Menjalankan Project
-Ikuti langkah-langkah di bawah ini untuk menjalankan project secara lokal di perangkatmu:
+Bash
+cd CitizenEye
 
-1. **Clone repository ini**
-   ```bash
-   git clone [https://github.com/fathanmz353/CitizenEye.git](https://github.com/fathanmz353/CitizenEye.git)
+Bash
+npm install
+
+Bash
+npm run start
