@@ -11,7 +11,7 @@ Ikuti langkah-langkah di bawah ini untuk menjalankan project secara lokal di per
 **Clone repository ini**
    ```bash
    git clone [https://github.com/fathanmz353/CitizenEye.git](https://github.com/fathanmz353/CitizenEye.git)]
-
+```
 Bash
 cd CitizenEye
 
@@ -20,3 +20,12 @@ npm install
 
 Bash
 npm run start
+## Progress Saat Ini
+
+* **Frontend & Tampilan Utama:** Selesai menggunakan **HTML5**, **Bootstrap 5**, dan kustomisasi **Glassmorphism**.
+* **Fitur Utama:** 
+  * Slideshow latar belakang gambar kota otomatis (*crossfade*).
+  * Form pembuatan laporan lengkap dengan opsi upload foto/video bukti (*file to Base64*).
+  * Fitur daftar pengawasan publik secara *real-time* berbasis `localStorage`.
+  * Halaman admin terpisah untuk pengelolaan laporan dan tanggapan petugas.
+* **Backend & Database:** Menggunakan penyimpanan lokal sisi klien (`localStorage`), belum menggunakan database eksternal.
