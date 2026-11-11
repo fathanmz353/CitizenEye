@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verifikasi Wajah - Admin</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { 
+      background-color: #f4f4f9; 
+      font-family: Arial, sans-serif; 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      padding: 20px; 
+      min-height: 100vh; 
+    }
+    .container-box { 
+      max-width: 700px; 
+      width: 100%; 
+      text-align: center; 
+    }
+    .card { 
+      background: #fff; 
+      padding: 15px; 
+      border-radius: 8px; 
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
+      margin-bottom: 15px; 
+    }
+    video, canvas { 
+      width: 100%; 
+      max-width: 300px; 
+      height: 220px; 
+      background-color: #000; 
+      border-radius: 6px; 
+      object-fit: cover; 
+      transform: scaleX(-1); 
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container-box">
+    <h2 class="mb-2">Verifikasi Keamanan Wajah</h2>
+    <p class="text-muted small">Anda wajib mengambil foto verifikasi wajah terlebih dahulu sebelum mengakses panel admin.</p>
+
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <div class="card">
+          <h5 class="fs-6">Kamera Live</h5>
+          <video id="webcam" autoplay playsinline muted></video>
+        </div>
+      </div>
+      <div class="col-md-6 mb-3">
+        <div class="card">
+          <h5 class="fs-6">Hasil Foto</h5>
+          <canvas id="canvas"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="d-flex justify-content-center gap-2 mb-4">
+      <button id="btnStart" class="btn btn-primary btn-sm fw-bold" onclick="startCamera()">Buka Kamera</button>
+      <button id="btnCapture" class="btn btn-success btn-sm fw-bold" onclick="takeSnapshot()" disabled>Ambil Foto</button>
+      <button id="btnStop" class="btn btn-danger btn-sm fw-bold" onclick="stopCamera()" disabled>Matikan Kamera</button>
+    </div>
+
+    <!-- Tombol ke panel admin (Disabled sampai foto diambil) -->
+    <div>
+      <a id="btnNextAdmin" href="data-masyarakat.html" class="btn btn-secondary btn-lg w-100 disabled" style="pointer-events: none;">
+        &rarr; Masuk ke Panel Admin (Selesaikan Verifikasi Foto Dulu)
+      </a>
+    </div>
+  </div>
+
+  <script>
+    const video = document.getElementById('webcam');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const btnStart = document.getElementById('btnStart');
+    const btnCapture = document.getElementById('btnCapture');
+    const btnStop = document.getElementById('btnStop');
+    const btnNextAdmin = document.getElementById('btnNextAdmin');
+
+    let streamRef = null;
+
+    async function startCamera() {
+      try {
+        streamRef = await navigator.mediaDevices.getUserMedia({ 
+          video: { width: 640, height: 480, facingMode: "user" }, 
+          audio: false 
+        });
+        video.srcObject = streamRef;
+        video.onloadedmetadata = () => {
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+        };
+        btnStart.disabled = true;
+        btnCapture.disabled = false;
+        btnStop.disabled = false;
+      } catch (error) {
+        alert("Gagal mengakses kamera. Pastikan izin kamera aktif di browser.");
+      }
+    }
+
+    function takeSnapshot() {
+      if (!streamRef) return;
+      ctx.save();
+      ctx.translate(canvas.width, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      ctx.restore();
+
+      btnNextAdmin.classList.remove('btn-secondary', 'disabled');
+      btnNextAdmin.classList.add('btn-success');
+      btnNextAdmin.style.pointerEvents = 'auto';
+      btnNextAdmin.innerText = '✓ Verifikasi Berhasil - Masuk ke Panel Admin';
+
+      alert("Verifikasi foto berhasil! Silakan klik tombol untuk masuk ke panel admin.");
+    }
+
+    function stopCamera() {
+      if (streamRef) {
+        streamRef.getTracks().forEach(track => track.stop());
+        video.srcObject = null;
+        streamRef = null;
+        btnStart.disabled = false;
+        btnCapture.disabled = true;
+        btnStop.disabled = true;
+      }
+    }
+  </script>
+</body>
+</html>

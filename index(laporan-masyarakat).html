@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Civic Reporting & Accountability - Lapor Warga</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <!-- Leaflet Geocoder CSS (Kotak Pencarian di dalam Peta) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+  <style>
+    body {
+      position: relative;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    .bg-slideshow-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -2;
+    }
+    .bg-slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-size: cover;
+      background-position: center;
+      opacity: 0;
+      transition: opacity 1.5s ease-in-out;
+    }
+    .bg-slide.active {
+      opacity: 1;
+    }
+    .bg-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      background-color: rgba(0, 0, 0, 0.45);
+    }
+    .glass-card {
+      background-color: rgba(255, 255, 255, 0.25) !important;
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.4) !important;
+    }
+    .glass-card h2, 
+    .glass-card label {
+      color: #ffffff !important;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    }
+    .form-control, 
+    .form-select {
+      background-color: rgba(255, 255, 255, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      color: #000000;
+    }
+    #map {
+      height: 320px;
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      margin-bottom: 10px;
+    }
+    .media-preview {
+      max-width: 100%;
+      max-height: 320px;
+      border-radius: 8px;
+      object-fit: cover;
+    }
+    .admin-response-box {
+      background-color: rgba(13, 110, 253, 0.1);
+      border-left: 3px solid #0d6efd;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="py-4">
+
+<div class="bg-slideshow-container">
+  <div class="bg-slide active" id="bgSlide1"></div>
+  <div class="bg-slide" id="bgSlide2"></div>
+</div>
+<div class="bg-overlay"></div>
+
+<div class="container" style="max-width: 800px;">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="text-white fw-bold shadow-sm h3 mb-0">Portal Pelaporan Warga</h1>
+    <a href="pasword.html" class="btn btn-light btn-sm fw-bold shadow">&larr; Login Admin</a>
+  </div>
+
+  <div class="card shadow-lg mb-4 glass-card">
+    <div class="card-body p-4">
+      <h2 class="h4 mb-3">Buat Laporan Baru</h2>
+      <form id="reportForm">
+        <div class="mb-3">
+          <label for="nama" class="form-label fw-bold">Nama Pelapor</label>
+          <input type="text" class="form-control" id="nama" placeholder="Masukkan nama Anda" required>
+        </div>
+        <div class="mb-3">
+          <label for="kategori" class="form-label fw-bold">Kategori Masalah</label>
+          <select class="form-select" id="kategori" required>
+            <option value="">-- Pilih Kategori --</option>
+            <option value="Infrastruktur Rusak">Infrastruktur Rusak</option>
+            <option value="Isu Lingkungan">Isu Lingkungan / Sampah</option>
+            <option value="Fasilitas Publik">Fasilitas Publik</option>
+            <option value="Dugaan Penyimpangan">Dugaan Penyimpangan</option>
+          </select>
+        </div>
+
+        <!-- Peta Interaktif Kembali ke Versi Awal -->
+        <div class="mb-3">
+          <label class="form-label fw-bold">Pilih Titik Lokasi Kejadian</label>
+          <div id="map"></div>
+          <input type="text" class="form-control" id="lokasi" placeholder="Gunakan pencarian di pojok peta atau klik langsung..." required readonly>
+          <small class="text-white text-shadow-sm d-block mt-1">💡 Klik ikon kaca pembesar di pojok kanan atas peta untuk mencari tempat/jalan, atau klik langsung pada peta.</small>
+        </div>
+
+        <div class="mb-3">
+          <label for="deskripsi" class="form-label fw-bold">Deskripsi Laporan</label>
+          <textarea class="form-control" id="deskripsi" rows="3" placeholder="Jelaskan detail masalah..." required></textarea>
+        </div>
+        <div class="mb-3">
+          <label for="mediaFile" class="form-label fw-bold">Upload Foto / Video Bukti (Opsional)</label>
+          <input type="file" class="form-control" id="mediaFile" accept="image/*,video/*">
+        </div>
+        <button type="submit" class="btn btn-primary w-100 fw-bold py-2 shadow">Kirim Laporan</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="card shadow-lg glass-card">
+    <div class="card-body p-4">
+      <h2 class="h4 mb-3">Daftar Pengawasan Publik (Real-time)</h2>
+      <div id="reportList">
+        <p id="emptyText" class="text-white">Belum ada laporan yang dikirim.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap & Leaflet JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+<script>
+  const map = L.map('map').setView([-6.9175, 107.6191], 13);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+
+  let selectedMarker = null;
+  let selectedLat = null;
+  let selectedLng = null;
+  let reportMarkersLayer = L.layerGroup().addTo(map);
+
+  // Fitur Pencarian di dalam Peta (Geocoder)
+  L.Control.geocoder({
+    defaultMarkGeocode: false,
+    placeholder: 'Cari daerah atau jalan...',
+    errorMessage: 'Lokasi tidak ditemukan.'
+  })
+  .on('markgeocode', function(e) {
+    const center = e.geocode.center;
+    map.setView(center, 16);
+
+    selectedLat = center.lat.toFixed(6);
+    selectedLng = center.lng.toFixed(6);
+
+    if (selectedMarker) {
+      selectedMarker.setLatLng([selectedLat, selectedLng]);
+    } else {
+      selectedMarker = L.marker([selectedLat, selectedLng], {
+        icon: L.icon({
+          iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+          shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+          iconSize: [25, 41],
+          iconAnchor: [12, 41],
+          popupAnchor: [1, -34],
+          shadowSize: [41, 41]
+        })
+      }).addTo(map);
+    }
+    selectedMarker.bindPopup(`<b>${e.geocode.name}</b>`).openPopup();
+    document.getElementById('lokasi').value = `Koordinat: ${selectedLat}, ${selectedLng} (${e.geocode.name})`;
+  })
+  .addTo(map);
+
+  // Klik langsung pada peta
+  map.on('click', function(e) {
+    selectedLat = e.latlng.lat.toFixed(6);
+    selectedLng = e.latlng.lng.toFixed(6);
+
+    if (selectedMarker) {
+      selectedMarker.setLatLng([selectedLat, selectedLng]);
+    } else {
+      selectedMarker = L.marker([selectedLat, selectedLng], {
+        icon: L.icon({
+          iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+          shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+          iconSize: [25, 41],
+          iconAnchor: [12, 41],
+          popupAnchor: [1, -34],
+          shadowSize: [41, 41]
+        })
+      }).addTo(map);
+    }
+    selectedMarker.bindPopup("<b>Lokasi Laporan Anda</b>").openPopup();
+    document.getElementById('lokasi').value = `Koordinat: ${selectedLat}, ${selectedLng}`;
+  });
+
+  const cityImages = [
+    'https://images.unsplash.com/photo-1519501025264-65ba15a82390?auto=format&fit=crop&w=1920&q=80',
+    'https://images.unsplash.com/photo-1477959858617-67f30ac4ce78?auto=format&fit=crop&w=1920&q=80'
+  ];
+  let currentImageIndex = 0;
+  let activeSlide = 1;
+  const slide1 = document.getElementById('bgSlide1');
+  const slide2 = document.getElementById('bgSlide2');
+  slide1.style.backgroundImage = `url('${cityImages[0]}')`;
+
+  setInterval(() => {
+    currentImageIndex = (currentImageIndex + 1) % cityImages.length;
+    const nextImage = cityImages[currentImageIndex];
+    if (activeSlide === 1) {
+      slide2.style.backgroundImage = `url('${nextImage}')`;
+      slide2.classList.add('active');
+      slide1.classList.remove('active');
+      activeSlide = 2;
+    } else {
+      slide1.style.backgroundImage = `url('${nextImage}')`;
+      slide1.classList.add('active');
+      slide2.classList.remove('active');
+      activeSlide = 1;
+    }
+  }, 4000);
+
+  function loadReports() {
+    const reportList = document.getElementById('reportList');
+    const emptyText = document.getElementById('emptyText');
+    const reports = JSON.parse(localStorage.getItem('civicReports')) || [];
+    
+    reportList.innerHTML = '';
+    reportMarkersLayer.clearLayers();
+
+    if (reports.length === 0) {
+      reportList.appendChild(emptyText);
+      emptyText.style.display = 'block';
+      return;
+    }
+
+    reports.forEach(report => {
+      if (report.lat && report.lng) {
+        const markerColor = report.status === 'Telah Diverifikasi' ? 'green' : 'gold';
+        const reportMarker = L.marker([report.lat, report.lng], {
+          icon: L.icon({
+            iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${markerColor}.png`,
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+          })
+        });
+        reportMarkersLayer.addLayer(reportMarker);
+      }
+
+      const reportCard = document.createElement('div');
+      reportCard.className = 'p-3 mb-3 bg-white bg-opacity-75 border-start border-primary border-4 rounded shadow-sm text-dark';
+      const badgeClass = report.status === 'Telah Diverifikasi' ? 'bg-success text-white' : 'bg-warning text-dark';
+      
+      const mediaHTML = report.media ? `<div class="mt-2 mb-2"><img src="${report.media}" class="media-preview" alt="Bukti"></div>` : '';
+      const noteHTML = report.adminNote ? `<div class="admin-response-box p-2 mt-2 mb-2"><small class="fw-bold text-primary d-block">💬 Tanggapan Petugas:</small><small class="text-dark">${report.adminNote}</small></div>` : '';
+
+      let lokasiHTML = report.lokasi;
+      if (report.lat && report.lng) {
+        const gmapsUrl = `https://www.google.com/maps/search/?api=1&query=${report.lat},${report.lng}`;
+        lokasiHTML = `<a href="${gmapsUrl}" target="_blank" class="text-decoration-none fw-bold text-primary">📍 ${report.lokasi} (Buka di Map ↗)</a>`;
+      }
+
+      reportCard.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <strong class="text-dark">[${report.ticketId}] ${report.kategori}</strong>
+          <span class="badge ${badgeClass}">${report.status}</span>
+        </div>
+        <p class="mb-2 text-dark">${report.deskripsi}</p>
+        ${mediaHTML} 
+        ${noteHTML}
+        <small class="text-muted"><strong>Pelapor:</strong> ${report.nama} | <strong>Lokasi:</strong> ${lokasiHTML} | <strong>Tanggal:</strong> ${report.tanggal}</small>
+      `;
+      reportList.appendChild(reportCard);
+    });
+  }
+
+  function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = error => reject(error);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  document.getElementById('reportForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    if (!selectedLat || !selectedLng) {
+      alert('Silakan pilih lokasi pada peta terlebih dahulu!');
+      return;
+    }
+
+    const fileInput = document.getElementById('mediaFile');
+    const mediaData = fileInput.files.length > 0 ? await fileToBase64(fileInput.files[0]) : null;
+
+    const newReport = {
+      ticketId: 'CR-' + Math.floor(100000 + Math.random() * 900000),
+      nama: document.getElementById('nama').value,
+      kategori: document.getElementById('kategori').value,
+      lokasi: document.getElementById('lokasi').value,
+      lat: selectedLat,
+      lng: selectedLng,
+      deskripsi: document.getElementById('deskripsi').value,
+      media: mediaData,
+      adminNote: '',
+      tanggal: new Date().toLocaleDateString('id-ID'),
+      status: 'Menunggu Verifikasi'
+    };
+
+    const reports = JSON.parse(localStorage.getItem('civicReports')) || [];
+    reports.unshift(newReport);
+    localStorage.setItem('civicReports', JSON.stringify(reports));
+    
+    this.reset();
+    if (selectedMarker) {
+      map.removeLayer(selectedMarker);
+      selectedMarker = null;
+    }
+    selectedLat = null;
+    selectedLng = null;
+
+    alert('Laporan berhasil dikirim dengan Nomor Tiket: ' + newReport.ticketId);
+    loadReports();
+  });
+
+  document.addEventListener('DOMContentLoaded', loadReports);
+</script>
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel Admin - Verifikasi Laporan Warga</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    .media-preview {
+      max-width: 100%;
+      max-height: 320px;
+      border-radius: 8px;
+      object-fit: cover;
+    }
+  </style>
+</head>
+<body class="bg-light py-5">
+
+<div class="container" style="max-width: 900px;">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h3 fw-bold text-dark">Panel Admin Verifikasi</h1>
+      <p class="text-muted mb-0">Kelola tanggapan dan verifikasi laporan warga</p>
+    </div>
+    <div>
+      <a href="laporan-masyarakat.html" class="btn btn-outline-primary btn-sm me-2">&larr; Keluar / Ke Portal</a>
+      <a href="log-verifikasi.html" class="btn btn-outline-primary btn-sm me-2">&larr; database</a>
+      <button class="btn btn-outline-danger btn-sm" onclick="clearAllData()">Hapus Semua Data</button>
+    </div>
+  </div>
+
+  <div class="card shadow-sm border-0 p-4">
+    <h2 class="h5 mb-3 text-secondary">Daftar Laporan Masuk</h2>
+    <div id="adminReportList"></div>
+  </div>
+</div>
+
+<script>
+  function renderAdminReports() {
+    const adminReportList = document.getElementById('adminReportList');
+    const reports = JSON.parse(localStorage.getItem('civicReports')) || [];
+    adminReportList.innerHTML = '';
+
+    if (reports.length === 0) {
+      adminReportList.innerHTML = '<p class="text-muted">Belum ada laporan dari warga.</p>';
+      return;
+    }
+
+    reports.forEach((report, index) => {
+      const isVerified = report.status === 'Telah Diverifikasi';
+      const badgeClass = isVerified ? 'bg-success text-white' : 'bg-warning text-dark';
+      const mediaHTML = report.media ? `<div class="mt-2 mb-2"><img src="${report.media}" class="media-preview" alt="Bukti"></div>` : '';
+      const currentNote = report.adminNote || '';
+
+      const card = document.createElement('div');
+      card.className = 'p-3 mb-3 border rounded bg-white shadow-sm';
+      card.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <strong class="text-dark">[${report.ticketId}] ${report.kategori}</strong>
+          <span class="badge ${badgeClass}">${report.status}</span>
+        </div>
+        <p class="mb-2 text-secondary">${report.deskripsi}</p>
+        ${mediaHTML}
+        
+        <div class="mt-3 p-3 bg-light rounded border">
+          <label class="form-label fw-bold text-dark mb-1">Tulis Tanggapan / Catatan Petugas:</label>
+          <div class="input-group">
+            <input type="text" class="form-control" id="noteInput-${index}" value="${currentNote}" placeholder="Contoh: Tim sedang meluncur...">
+            <button class="btn btn-outline-secondary" type="button" onclick="saveNoteOnly(${index})">Simpan Catatan</button>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
+          <small class="text-muted"><strong>Pelapor:</strong> ${report.nama} | <strong>Lokasi:</strong> ${report.lokasi}</small>
+          ${!isVerified 
+            ? `<button class="btn btn-sm btn-success fw-bold" onclick="verifyReport(${index})">✓ Ubah Jadi Telah Diverifikasi</button>` 
+            : `<span class="text-success small fw-bold">✓ Sudah Diverifikasi</span>`
+          }
+        </div>
+      `;
+      adminReportList.appendChild(card);
+    });
+  }
+
+  function saveNoteOnly(index) {
+    const reports = JSON.parse(localStorage.getItem('civicReports')) || [];
+    reports[index].adminNote = document.getElementById(`noteInput-${index}`).value;
+    localStorage.setItem('civicReports', JSON.stringify(reports));
+    alert('Catatan berhasil disimpan!');
+    renderAdminReports();
+  }
+
+  function verifyReport(index) {
+    const reports = JSON.parse(localStorage.getItem('civicReports')) || [];
+    reports[index].adminNote = document.getElementById(`noteInput-${index}`).value;
+    reports[index].status = 'Telah Diverifikasi';
+    localStorage.setItem('civicReports', JSON.stringify(reports));
+    renderAdminReports();
+    alert('Status laporan berhasil diverifikasi!');
+  }
+
+  function clearAllData() {
+    if (confirm('Yakin ingin menghapus seluruh data laporan?')) {
+      localStorage.removeItem('civicReports');
+      renderAdminReports();
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', renderAdminReports);
+</script>
+</body>
+</html>

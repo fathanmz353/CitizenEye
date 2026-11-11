@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login Admin - Panel Laporan</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex items-center justify-center p-4" x-data="loginApp()">
+
+  <div class="w-full max-w-md">
+    <!-- Form Login -->
+    <div x-show="!isLoggedIn" class="bg-slate-800/80 backdrop-blur-xl border border-slate-700/60 rounded-2xl p-6 sm:p-8 shadow-2xl">
+      <div class="text-center mb-6">
+        <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-indigo-600/20 text-indigo-400 mb-3">
+          <i class="ph-bold ph-lock-key text-2xl"></i>
+        </div>
+        <h1 class="text-2xl font-bold text-white">Login Admin</h1>
+        <p class="text-xs text-slate-400 mt-1">Masukkan kredensial admin yang terdaftar</p>
+      </div>
+
+      <div x-show="errorMessage" class="mb-4 bg-rose-500/10 border border-rose-500/30 text-rose-300 px-3 py-2 rounded-xl text-xs flex items-center gap-2">
+        <i class="ph-bold ph-warning-circle text-lg"></i>
+        <span x-text="errorMessage"></span>
+      </div>
+
+      <form @submit.prevent="handleLogin" class="space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1">Nama Pengguna</label>
+          <input type="text" x-model="username" required placeholder="Masukkan username" class="w-full bg-slate-900 border border-slate-700 text-white rounded-xl py-2.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1">Kata Sandi</label>
+          <input type="password" x-model="password" required placeholder="Masukkan kata sandi" class="w-full bg-slate-900 border border-slate-700 text-white rounded-xl py-2.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+        <button type="submit" :disabled="isLoading" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 rounded-xl text-sm transition duration-150 flex items-center justify-center gap-2">
+          <span x-show="!isLoading">Masuk</span>
+          <span x-show="isLoading">Memverifikasi...</span>
+        </button>
+      </form>
+    </div>
+
+    <!-- Tampilan Sukses & Countdown -->
+    <div x-show="isLoggedIn" style="display: none;" class="bg-slate-800/80 backdrop-blur-xl border border-slate-700/60 rounded-2xl p-6 sm:p-8 shadow-2xl text-center">
+      <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 mb-4">
+        <i class="ph-bold ph-check-circle text-3xl"></i>
+      </div>
+      <h2 class="text-2xl font-bold text-white mb-1">Login Berhasil!</h2>
+      <p class="text-sm text-slate-400 mb-4">Anda akan diarahkan ke halaman verifikasi wajah dalam <span class="font-bold text-indigo-400" x-text="countdown"></span> detik...</p>
+      
+      <div class="animate-pulse bg-indigo-600/20 border border-indigo-500/30 text-indigo-300 p-3 rounded-xl text-xs mb-4">
+        Mohon tunggu sebentar, sistem sedang mengalihkan halaman...
+      </div>
+
+      <a href="veriyvikasi.html" class="block w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 rounded-xl text-sm text-center">
+        Lanjut Sekarang
+      </a>
+    </div>
+  </div>
+
+  <script>
+    function loginApp() {
+      return {
+        username: '', 
+        password: '', 
+        isLoading: false, 
+        errorMessage: '',
+        isLoggedIn: false, 
+        countdown: 5,
+        validCredentials: [
+          { username: 'fathan', password: 'admin1' },
+          { username: 'arsavin', password: 'admin2' },
+          { username: 'rayyan', password: 'admin3' }
+        ],
+        handleLogin() {
+          this.errorMessage = '';
+          this.isLoading = true;
+          setTimeout(() => {
+            const found = this.validCredentials.find(acc => acc.username === this.username.trim() && acc.password === this.password);
+            if (found) {
+              this.isLoggedIn = true;
+              this.isLoading = false;
+
+              // Simpan log login ke localStorage
+              const logs = JSON.parse(localStorage.getItem('adminLogs')) || [];
+              logs.unshift({
+                username: found.username,
+                loginTime: new Date().toLocaleString('id-ID')
+              });
+              localStorage.setItem('adminLogs', JSON.stringify(logs));
+
+              const timer = setInterval(() => {
+                this.countdown--;
+                if (this.countdown <= 0) {
+                  clearInterval(timer);
+                  window.location.href = 'veriyvikasi.html';
+                }
+              }, 1000);
+            } else {
+              this.errorMessage = 'Nama pengguna atau kata sandi salah!';
+              this.isLoading = false;
+            }
+          }, 500);
+        }
+      }
+    }
+  </script>
+</body>
+</html>
